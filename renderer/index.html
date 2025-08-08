@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redis Man PC</title>
+  <link rel="stylesheet" href="style.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+  <div id="app">
+    <!-- 顶部工具栏 -->
+    <header class="toolbar">
+      <div class="toolbar-left">
+        <button id="new-connection" class="btn btn-primary">
+          <i class="fas fa-plus"></i>
+          新建连接
+        </button>
+        <button id="settings" class="btn btn-secondary">
+          <i class="fas fa-cog"></i>
+        </button>
+        <button id="history" class="btn btn-secondary">
+          <i class="fas fa-history"></i>
+        </button>
+      </div>
+      <div class="toolbar-center">
+        <div id="connection-tabs" class="connection-tabs">
+          <!-- 连接标签将在这里动态生成 -->
+        </div>
+      </div>
+      <div class="toolbar-right">
+        <div class="auto-refresh">
+          <span>自动刷新</span>
+          <label class="switch">
+            <input type="checkbox" id="auto-refresh-toggle">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+      <!-- 左侧面板 -->
+      <aside class="sidebar">
+        <div class="connection-info">
+          <div id="current-connection" class="current-connection">
+            <i class="fas fa-database"></i>
+            <span>未连接</span>
+          </div>
+          <div class="database-selector">
+            <select id="database-select">
+              <option value="0">DB 0</option>
+            </select>
+            <button id="new-key" class="btn btn-sm btn-primary">
+              <i class="fas fa-plus"></i>
+              新建键
+            </button>
+          </div>
+        </div>
+        
+        <div class="search-box">
+          <div class="search-input">
+            <i class="fas fa-search"></i>
+            <input type="text" id="key-search" placeholder="搜索键...">
+          </div>
+        </div>
+
+        <div class="keys-panel">
+          <div class="keys-header">
+            <span>键列表</span>
+            <div class="keys-actions">
+              <button id="load-all" class="btn btn-sm btn-primary">加载全部</button>
+              <button id="delete-all" class="btn btn-sm btn-danger">删除全部</button>
+            </div>
+          </div>
+          <div id="keys-list" class="keys-list">
+            <!-- 键列表将在这里动态生成 -->
+          </div>
+        </div>
+      </aside>
+
+      <!-- 右侧主面板 -->
+      <main class="content-panel">
+        <!-- 服务器信息面板 -->
+        <div class="info-panels">
+          <div class="info-panel">
+            <div class="panel-header">
+              <i class="fas fa-server"></i>
+              <span>服务器信息</span>
+            </div>
+            <div class="panel-content" id="server-info">
+              <div class="info-item">
+                <span class="label">Redis版本:</span>
+                <span class="value" id="redis-version">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">操作系统:</span>
+                <span class="value" id="redis-os">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">进程ID:</span>
+                <span class="value" id="redis-pid">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-panel">
+            <div class="panel-header">
+              <i class="fas fa-memory"></i>
+              <span>内存信息</span>
+            </div>
+            <div class="panel-content" id="memory-info">
+              <div class="info-item">
+                <span class="label">已用内存:</span>
+                <span class="value" id="used-memory">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">内存峰值:</span>
+                <span class="value" id="used-memory-peak">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">Lua内存:</span>
+                <span class="value" id="used-memory-lua">-</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="info-panel">
+            <div class="panel-header">
+              <i class="fas fa-chart-line"></i>
+              <span>统计信息</span>
+            </div>
+            <div class="panel-content" id="stats-info">
+              <div class="info-item">
+                <span class="label">连接客户端:</span>
+                <span class="value" id="connected-clients">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">总连接数:</span>
+                <span class="value" id="total-connections">-</span>
+              </div>
+              <div class="info-item">
+                <span class="label">总命令数:</span>
+                <span class="value" id="total-commands">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 键值操作面板 -->
+        <div class="key-value-panel">
+          <div class="panel-header">
+            <i class="fas fa-key"></i>
+            <span>键值操作</span>
+          </div>
+          <div class="panel-content">
+            <div class="key-input-group">
+              <input type="text" id="key-input" placeholder="键名" class="form-input">
+              <div class="key-actions">
+                <button id="get-btn" class="btn btn-primary">
+                  <i class="fas fa-search"></i>
+                  获取
+                </button>
+                <button id="set-btn" class="btn btn-success">
+                  <i class="fas fa-save"></i>
+                  设置
+                </button>
+                <button id="del-btn" class="btn btn-danger">
+                  <i class="fas fa-trash"></i>
+                  删除
+                </button>
+              </div>
+            </div>
+            <div class="value-input-group">
+              <textarea id="value-input" placeholder="值" class="form-textarea"></textarea>
+            </div>
+            <div id="result" class="result-panel">
+              <div class="result-header">
+                <span>结果</span>
+                <button id="clear-result" class="btn btn-sm btn-secondary">
+                  <i class="fas fa-times"></i>
+                </button>
+              </div>
+              <div id="result-content" class="result-content">
+                请选择连接并执行操作
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 键统计面板 -->
+        <div class="key-stats-panel">
+          <div class="panel-header">
+            <i class="fas fa-chart-bar"></i>
+            <span>键统计</span>
+          </div>
+          <div class="panel-content">
+            <table class="stats-table">
+              <thead>
+                <tr>
+                  <th>数据库</th>
+                  <th>键数量</th>
+                  <th>过期键</th>
+                  <th>平均TTL</th>
+                </tr>
+              </thead>
+              <tbody id="stats-table-body">
+                <!-- 统计数据将在这里动态生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- 新建连接模态框 -->
+  <div id="connection-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建连接</h3>
+        <button class="modal-close" id="modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="modal-name">连接名称</label>
+          <input type="text" id="modal-name" placeholder="连接名称（可选）" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="modal-host">主机地址</label>
+          <input type="text" id="modal-host" placeholder="localhost" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="modal-port">端口</label>
+          <input type="number" id="modal-port" placeholder="6379" value="6379" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="modal-password">密码</label>
+          <input type="password" id="modal-password" placeholder="密码（可选）" class="form-input">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel" class="btn btn-secondary">取消</button>
+        <button id="modal-ok" class="btn btn-primary">连接</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新建键模态框 -->
+  <div id="key-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>新建键</h3>
+        <button class="modal-close" id="key-modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label for="new-key-name">键名</label>
+          <input type="text" id="new-key-name" placeholder="键名" class="form-input">
+        </div>
+        <div class="form-group">
+          <label for="new-key-type">类型</label>
+          <select id="new-key-type" class="form-input">
+            <option value="string">String</option>
+            <option value="hash">Hash</option>
+            <option value="list">List</option>
+            <option value="set">Set</option>
+            <option value="zset">ZSet</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="new-key-value">值</label>
+          <textarea id="new-key-value" placeholder="值" class="form-textarea"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="key-modal-cancel" class="btn btn-secondary">取消</button>
+        <button id="key-modal-ok" class="btn btn-primary">创建</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="index.js"></script>
+</body>
+</html>
