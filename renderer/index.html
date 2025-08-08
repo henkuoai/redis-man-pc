@@ -286,6 +286,43 @@
     </div>
   </div>
 
+  <!-- 历史日志模态框 -->
+  <div id="history-modal" class="modal">
+    <div class="modal-content modal-lg">
+      <div class="modal-header">
+        <h3>操作历史</h3>
+        <button class="modal-close" id="history-modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="history-toolbar">
+          <button id="refresh-logs" class="btn btn-sm btn-secondary"><i class="fas fa-rotate"></i> 刷新</button>
+          <button id="clear-logs" class="btn btn-sm btn-danger"><i class="fas fa-trash"></i> 清空</button>
+        </div>
+        <div id="history-list" class="list-view"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 设置模态框 -->
+  <div id="settings-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>设置</h3>
+        <button class="modal-close" id="settings-modal-close">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>软件版本</label>
+          <input type="text" id="app-version" class="form-input" readonly>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="index.js"></script>
 </body>
 </html>

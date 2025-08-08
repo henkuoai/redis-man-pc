@@ -61,10 +61,69 @@
 
 ### 构建应用
 
-```bash
-npm run build
+#### 本地构建
 
+```bash
+# 构建 Windows 安装包
+npm run build:win
+
+# 构建 Linux 安装包
+npm run build:linux
+
+# 构建 macOS 安装包
+npm run build:mac
+
+# 构建所有平台安装包
+npm run build
 ```
+
+#### 自动构建
+
+项目配置了 GitHub Actions 自动构建流程：
+
+1. **推送标签触发构建**
+   ```bash
+   git tag v1.0.0
+   git push origin v1.0.0
+   ```
+
+2. **手动触发构建**
+   - 在 GitHub 仓库页面点击 "Actions"
+   - 选择 "Build and Release" 工作流
+   - 点击 "Run workflow"
+
+3. **使用发布脚本（推荐）**
+   ```bash
+   # 发布补丁版本 (1.0.0 -> 1.0.1)
+   node release.js patch
+   
+   # 发布次要版本 (1.0.0 -> 1.1.0)
+   node release.js minor
+   
+   # 发布主要版本 (1.0.0 -> 2.0.0)
+   node release.js major
+   
+   # 发布指定版本
+   node release.js 1.2.3
+   ```
+
+构建完成后，安装包会自动上传到 GitHub Releases。
+
+## 下载安装
+
+### 最新版本
+
+访问 [GitHub Releases](https://github.com/your-username/redis-man-pc/releases) 下载最新版本的安装包：
+
+- **Windows**: `Redis Man PC Setup x.x.x.exe`
+- **Linux**: `redis-man-pc-x.x.x.AppImage` 或 `redis-man-pc_x.x.x_amd64.deb`
+- **macOS**: `Redis Man PC-x.x.x.dmg`
+
+### 系统要求
+
+- **Windows**: Windows 10 或更高版本
+- **Linux**: Ubuntu 18.04+ 或其他支持 AppImage 的发行版
+- **macOS**: macOS 10.14+ (Mojave 或更高版本)
 
 ## 使用说明
 

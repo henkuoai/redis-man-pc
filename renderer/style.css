@@ -616,6 +616,10 @@ input:checked + .slider:before {
   overflow-y: auto;
 }
 
+.modal-content.modal-lg {
+  max-width: 900px;
+}
+
 .modal-header {
   padding: 20px;
   border-bottom: 1px solid #e1e8ed;
@@ -648,6 +652,37 @@ input:checked + .slider:before {
 .modal-body {
   padding: 20px;
 }
+
+/* 历史列表样式 */
+.history-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.list-view {
+  border: 1px solid #e1e8ed;
+  border-radius: 6px;
+  background: #fff;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.list-item {
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 180px 100px 1fr;
+  gap: 12px;
+  border-bottom: 1px solid #f1f1f1;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 12px;
+}
+
+.list-item:nth-child(odd) { background: #fafafa; }
+.list-item:last-child { border-bottom: none; }
+.list-item .op { color: #007bff; font-weight: 600; }
+.list-item .time { color: #6c757d; }
+.list-item .error { color: #dc3545; }
 
 .form-group {
   margin-bottom: 20px;

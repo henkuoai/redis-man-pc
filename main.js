@@ -5,6 +5,21 @@ const Redis = require('redis');
 // 连接池，key为host:port
 const redisClients = {};
 
+// 简单日志存储（内存）
+const redisLogs = [];
+
+function addLog(entry) {
+  const log = {
+    time: new Date().toISOString(),
+    ...entry,
+  };
+  // 限制日志长度，避免无限增长
+  redisLogs.push(log);
+  if (redisLogs.length > 5000) {
+    redisLogs.shift();
+  }
+}
+
 // 获取Redis客户端
 function getRedisClient(connection) {
   const key = `${connection.host}:${connection.port}`;
@@ -32,8 +47,10 @@ ipcMain.handle('redis-connect', async (event, { connection }) => {
   try {
     const client = getRedisClient(connection);
     await client.ping();
+    addLog({ op: 'connect', connection, success: true });
     return { success: true };
   } catch (err) {
+    addLog({ op: 'connect', connection, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -59,7 +76,7 @@ ipcMain.handle('redis-info', async (event, { connection, database }) => {
       }
     });
     
-    return { 
+    const response = { 
       success: true, 
       data: {
         redis_version: infoData['redis_version'],
@@ -73,7 +90,10 @@ ipcMain.handle('redis-info', async (event, { connection, database }) => {
         total_commands_processed: parseInt(infoData['total_commands_processed'] || '0')
       }
     };
+    addLog({ op: 'info', connection, database, success: true });
+    return response;
   } catch (err) {
+    addLog({ op: 'info', connection, database, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -107,8 +127,11 @@ ipcMain.handle('redis-keys', async (event, { connection, database, pattern }) =>
       }
     }
     
-    return { success: true, data: keyData };
+    const res = { success: true, data: keyData };
+    addLog({ op: 'keys', connection, database, success: true, count: keyData.length });
+    return res;
   } catch (err) {
+    addLog({ op: 'keys', connection, database, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -147,8 +170,10 @@ ipcMain.handle('redis-get', async (event, { connection, database, key }) => {
         result = await client.get(key);
     }
     
+    addLog({ op: 'get', connection, database, key, type, success: true });
     return { success: true, data: result, type: type };
   } catch (err) {
+    addLog({ op: 'get', connection, database, key, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -178,8 +203,10 @@ ipcMain.handle('redis-set', async (event, { connection, database, key, value, ty
       }
     }
     
+    addLog({ op: 'set', connection, database, key, type: type || 'auto', success: true });
     return { success: true };
   } catch (err) {
+    addLog({ op: 'set', connection, database, key, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -309,8 +336,10 @@ ipcMain.handle('redis-del', async (event, { connection, database, key }) => {
     }
     
     const result = await client.del(key);
+    addLog({ op: 'del', connection, database, key, success: true });
     return { success: true, data: result };
   } catch (err) {
+    addLog({ op: 'del', connection, database, key, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -333,8 +362,10 @@ ipcMain.handle('redis-delete-all', async (event, { connection, database }) => {
     
     // 删除所有键
     const result = await client.del(keys);
+    addLog({ op: 'delete-all', connection, database, success: true, count: keys.length });
     return { success: true, data: result };
   } catch (err) {
+    addLog({ op: 'delete-all', connection, database, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -468,8 +499,10 @@ ipcMain.handle('redis-create-key', async (event, { connection, database, key, ty
       }
     }
     
+    addLog({ op: 'create-key', connection, database, key, type, success: true });
     return { success: true };
   } catch (err) {
+    addLog({ op: 'create-key', connection, database, key, type, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -523,8 +556,10 @@ ipcMain.handle('redis-stats', async (event, { connection }) => {
       });
     }
 
+    addLog({ op: 'stats', connection, success: true });
     return { success: true, data: stats };
   } catch (err) {
+    addLog({ op: 'stats', connection, success: false, error: err.message });
     return { success: false, error: err.message };
   }
 });
@@ -570,6 +605,22 @@ ipcMain.handle('redis-op', async (event, { op, server, key, value }) => {
   }
 });
 
+// 获取日志
+ipcMain.handle('get-logs', async () => {
+  return { success: true, data: redisLogs.slice().reverse() };
+});
+
+// 清空日志
+ipcMain.handle('clear-logs', async () => {
+  redisLogs.length = 0;
+  return { success: true };
+});
+
+// 应用版本
+ipcMain.handle('app-version', async () => {
+  return { success: true, data: app.getVersion() };
+});
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1200,
@@ -583,7 +634,8 @@ function createWindow() {
     },
     titleBarStyle: 'default',
     show: false,
-    autoHideMenuBar: true
+    autoHideMenuBar: true,
+    icon: path.join(__dirname, 'icon.png')
   });
 
   win.loadFile('renderer/index.html');

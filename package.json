@@ -7,7 +7,8 @@
     "build:win": "electron-builder --win",
     "build:linux": "electron-builder --linux",
     "build:mac": "electron-builder --mac",
-    "build": "electron-builder -mwl"
+    "build": "electron-builder -mwl",
+    "build:script": "node build.js"
   },
   "keywords": [],
   "author": "",
@@ -16,6 +17,7 @@
   "build": {
     "appId": "com.example.redismanpc",
     "productName": "Redis Man PC",
+    "icon": "icon.png",
     "directories": {
       "buildResources": "build",
       "output": "dist"

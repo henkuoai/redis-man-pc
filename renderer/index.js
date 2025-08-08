@@ -27,6 +27,12 @@ function setupEventListeners() {
   // 新建连接
   document.getElementById('new-connection').addEventListener('click', showConnectionModal);
   
+  // 设置按钮
+  document.getElementById('settings').addEventListener('click', showSettings);
+  
+  // 历史按钮
+  document.getElementById('history').addEventListener('click', showHistory);
+  
   // 新建键
   document.getElementById('new-key').addEventListener('click', showKeyModal);
   
@@ -75,6 +81,31 @@ function setupModalEvents() {
   document.getElementById('key-modal-cancel').addEventListener('click', hideKeyModal);
   document.getElementById('key-modal-ok').addEventListener('click', createKey);
   
+  // 历史模态框
+  const historyModal = document.getElementById('history-modal');
+  if (historyModal) {
+    document.getElementById('history-modal-close').addEventListener('click', hideHistoryModal);
+    historyModal.addEventListener('click', function(e) {
+      if (e.target === this) hideHistoryModal();
+    });
+    const refreshBtn = document.getElementById('refresh-logs');
+    const clearBtn = document.getElementById('clear-logs');
+    if (refreshBtn) refreshBtn.addEventListener('click', loadLogs);
+    if (clearBtn) clearBtn.addEventListener('click', async () => {
+      await window.electronAPI.invoke('clear-logs');
+      await loadLogs();
+    });
+  }
+
+  // 设置模态框
+  const settingsModal = document.getElementById('settings-modal');
+  if (settingsModal) {
+    document.getElementById('settings-modal-close').addEventListener('click', hideSettingsModal);
+    settingsModal.addEventListener('click', function(e) {
+      if (e.target === this) hideSettingsModal();
+    });
+  }
+
   // 点击模态框背景关闭
   document.getElementById('connection-modal').addEventListener('click', function(e) {
     if (e.target === this) hideConnectionModal();
@@ -652,6 +683,72 @@ function formatBytes(bytes) {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+// 显示设置
+async function showSettings() {
+  try {
+    const res = await window.electronAPI.invoke('app-version');
+    if (res && res.success) {
+      const versionInput = document.getElementById('app-version');
+      if (versionInput) versionInput.value = `v${res.data}`;
+    }
+  } catch (_) {}
+  document.getElementById('settings-modal').classList.add('show');
+}
+
+function hideSettingsModal() {
+  document.getElementById('settings-modal').classList.remove('show');
+}
+
+// 显示历史
+async function showHistory() {
+  await loadLogs();
+  document.getElementById('history-modal').classList.add('show');
+}
+
+function hideHistoryModal() {
+  document.getElementById('history-modal').classList.remove('show');
+}
+
+async function loadLogs() {
+  try {
+    const res = await window.electronAPI.invoke('get-logs');
+    if (res && res.success) {
+      renderLogs(res.data || []);
+    }
+  } catch (error) {
+    // 忽略渲染错误
+  }
+}
+
+function renderLogs(logs) {
+  const container = document.getElementById('history-list');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!Array.isArray(logs) || logs.length === 0) {
+    container.innerHTML = '<div style="padding:12px;color:#6c757d;">暂无日志</div>';
+    return;
+  }
+  for (const log of logs) {
+    const item = document.createElement('div');
+    item.className = 'list-item';
+    const conn = log.connection ? `${log.connection.host}:${log.connection.port}` : '';
+    const details = [];
+    if (conn) details.push(conn);
+    if (typeof log.database === 'number') details.push(`db=${log.database}`);
+    if (log.key) details.push(`key=${log.key}`);
+    if (log.count != null) details.push(`count=${log.count}`);
+    if (log.type) details.push(`type=${log.type}`);
+    const extra = details.join('  ');
+    const errorText = log.success ? '' : `<span class="error">${log.error || 'error'}</span>`;
+    item.innerHTML = `
+      <div class="time">${log.time || ''}</div>
+      <div class="op">${log.op || ''}</div>
+      <div>${extra} ${errorText}</div>
+    `;
+    container.appendChild(item);
+  }
 }
 
 // 导出全局函数供HTML调用
