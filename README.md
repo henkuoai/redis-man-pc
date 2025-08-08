@@ -82,17 +82,20 @@ npm run build
 项目配置了 GitHub Actions 自动构建流程：
 
 1. **推送标签触发构建**
+   
    ```bash
    git tag v1.0.0
    git push origin v1.0.0
    ```
 
 2. **手动触发构建**
+   
    - 在 GitHub 仓库页面点击 "Actions"
    - 选择 "Build and Release" 工作流
    - 点击 "Run workflow"
 
 3. **使用发布脚本（推荐）**
+   
    ```bash
    # 发布补丁版本 (1.0.0 -> 1.0.1)
    node release.js patch
